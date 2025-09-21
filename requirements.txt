@@ -1,0 +1,13 @@
+guardrails-ai
+langchain
+langchain_openai
+cloudscraper
+playwright
+beautifulsoup4
+mcp[cli]
+pymongo
+langchain-community
+sentence-transformers
+langchain-huggingface
+qdrant-client
+fastapi
