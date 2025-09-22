@@ -70,24 +70,26 @@ async def workflow(conv_id: str, query: str):
 
     # Step 1: Guardrails input
     if is_math_input(query) == 0:
-        return {
-            "conv_id": conv_id,
+        # Ensure conv_id is a string
+        conv_id_str = conv_id if conv_id else ""
+        return [{
+            "conv_id": conv_id_str,
+            "unique_id": "",  # Empty string instead of None
             "query": query,
             "answer": "❌ Please enter a mathematics question.",
-        }
+        }]
 
     # Step 2: Try retrieval from Qdrant
     context = search_qa(query)
     if context == 0:
-        # fallback: MCP web search
         print("No relevant data in Qdrant. Falling back to MCP web search...")
         mcp_result = await call_tool(query)
-        if mcp_result and hasattr(mcp_result, "structured_content"):
-            context = str(mcp_result.structured_content)
+        if mcp_result:
+            context = str(mcp_result)
         else:
             context = "No relevant data"
 
-    print("Retrieved context:\n", context)
+    print("Retrieved context:\n", context[:100])
 
     # Step 3: Fetch conversation history
     conversations = await get_conversation_history(conv_id)
@@ -103,20 +105,25 @@ async def workflow(conv_id: str, query: str):
 
     # Step 5: Guardrails output
     if is_math_output(markdown_output) == 0:
-        return {
-            "conv_id": conv_id,
+        # Ensure conv_id is a string
+        conv_id_str = conv_id if conv_id else ""
+        return [{
+            "conv_id": conv_id_str,
+            "unique_id": "",  # Empty string instead of None
             "query": query,
             "answer": "❌ Output failed guardrails: Not a valid math response.",
-        }
+        }]
 
     # Step 6: Save Q&A record
     record = await create_qa_record(query, markdown_output)
     query_final = record.get("question", query)
     answer_final = record.get("answer", markdown_output)
-    unique_id = record.get("unique_id", None)  # 🔹 extract unique_id
+    unique_id = record.get("unique_id", "")  # Default to empty string if not present
 
     # Step 7: Save to conversation log
     conv_id = await save_conversation_turn(query_final, answer_final, conv_id)
+    # Ensure conv_id is a string
+    conv_id_str = conv_id if conv_id else ""
 
     print("**" * 40)
     print("Workflow completed successfully ✅")
@@ -124,7 +131,7 @@ async def workflow(conv_id: str, query: str):
     # Step 8: Return final response
     return [
         {
-            "conv_id": conv_id,
+            "conv_id": conv_id_str,
             "unique_id": unique_id,
             "query": query_final,
             "answer": answer_final,
