@@ -8,7 +8,7 @@ client = Client("http://localhost:8001/mcp")
 
 async def call_tool(query: str):
     async with client:
-        result = await client.call_tool("enrich_query", {"query": query})
+        result = await client.call_tool("get_websearch", {"query": query})
         # Extract the exact same JSON data structure
         final_data = []
         for content in result.content:
@@ -19,7 +19,7 @@ async def call_tool(query: str):
         return final_data
 
 
-# if __name__ == "__main__":
-#     query = "what is 2 + 2?"
-#     results = asyncio.run(call_tool(query))
-#     print(json.dumps(results, indent=2))
+if __name__ == "__main__":
+    query = "what is 2 + 2?"
+    results = asyncio.run(call_tool(query))
+    print(json.dumps(results, indent=2))
